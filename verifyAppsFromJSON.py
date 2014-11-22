@@ -10,20 +10,16 @@ from ast import literal_eval
 def main(path):
     try:
         files = listdir_fullpath(path)
-        print files
         keys = get_common_keys(files)
         results, headers = check_keys(keys, files)
-        print headers, results
         results_to_text(results, "results.txt", headers)
         results_to_vega()
-        for file in files:
-            file_name_to_columns(file)
     except:
         error = sys.exc_info()[0]
         print "error", error
         print traceback.format_exc()
 
-def file_name_to_columns(filename):
+def filename_to_columns(filename):
     attribs = ["port", "user", "endpoint", "criteria"]
     filename = os.path.split(filename)[1]
     columns = filename.split('_')
@@ -32,12 +28,13 @@ def file_name_to_columns(filename):
         fileattribs[attrib] =  columns[attribs.index(attrib)]
     return fileattribs
 
+
 def results_to_text(results, outputfile, headers=None):
-    print headers
     report = open(outputfile, "w+")
     if headers is not None:
         reportheaders = "\t {headers}\n".format(headers="\t".join(headers))
         report.writelines(reportheaders)
+    print results
     reportdata = "\n".join(["\t".join(map(str, [str(value.values())[1:-1] for value in result])) for result in results])
     report.write(reportdata)
     report.close()
@@ -82,7 +79,8 @@ def get_common_keys(filelist):
 def check_keys(keys, filelist):
     tests = []
     for file in filelist:
-        test = [{"file": file}]
+        test = [filename_to_columns(file)]
+        #test = [{"file": file}]
         data = read_file(file)
         badkeys = []
         for key in keys:
@@ -99,6 +97,7 @@ def check_keys(keys, filelist):
         if len(badkeys) > 0:
             for key in badkeys:
                 keys.remove(key)
+    print tests
     return tests, keys
 
 
