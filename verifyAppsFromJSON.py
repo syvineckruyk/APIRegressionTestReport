@@ -12,6 +12,7 @@ def main(path):
         files = listdir_fullpath(path)
         keys = get_common_keys(files)
         results, headers = check_keys(keys, files)
+        print headers, results
         results_to_text(results, "results.txt", headers)
         results_to_vega()
     except:
@@ -23,16 +24,17 @@ def filename_to_columns(filename):
     attribs = ["port", "user", "endpoint", "criteria"]
     filename = os.path.split(filename)[1]
     columns = filename.split('_')
-    fileattribs = {}
+    fileattribs = []
     for attrib in attribs:
-        fileattribs[attrib] =  columns[attribs.index(attrib)]
-    return fileattribs
+        fileattribs.append({attrib: columns[attribs.index(attrib)]})
+    #print fileattribs
+    return fileattribs, attribs
 
 
 def results_to_text(results, outputfile, headers=None):
     report = open(outputfile, "w+")
     if headers is not None:
-        reportheaders = "\t {headers}\n".format(headers="\t".join(headers))
+        reportheaders = "{headers}\n".format(headers="\t".join(headers))
         report.writelines(reportheaders)
     print results
     reportdata = "\n".join(["\t".join(map(str, [str(value.values())[1:-1] for value in result])) for result in results])
@@ -79,8 +81,7 @@ def get_common_keys(filelist):
 def check_keys(keys, filelist):
     tests = []
     for file in filelist:
-        test = [filename_to_columns(file)]
-        #test = [{"file": file}]
+        test, testheaders = filename_to_columns(file)
         data = read_file(file)
         badkeys = []
         for key in keys:
@@ -88,8 +89,8 @@ def check_keys(keys, filelist):
                 result = {key: sum_values(key=key, valuelist=get_values(key=key, recordlist=data))}
                 test.append(result)
             except Exception as error:
-                print error
-                print file, key
+                # print error
+                # print file, key
                 badkeys.append(key)
                 #keys.remove(key)
                 pass
@@ -97,8 +98,7 @@ def check_keys(keys, filelist):
         if len(badkeys) > 0:
             for key in badkeys:
                 keys.remove(key)
-    print tests
-    return tests, keys
+    return tests, testheaders+keys
 
 
 def get_apps(inputfile):
